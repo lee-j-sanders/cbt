@@ -1,0 +1,276 @@
+cluster:
+  user: 'root'
+  head: "cephalasquad6.ssd.hursley.ibm.com"
+  clients: ["cephalasquad6.ssd.hursley.ibm.com"]
+  osds: ["cephalasquad6.ssd.hursley.ibm.com"]
+  mons:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: "9.71.45.49:6789"
+  mgrs:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: ~
+  osds_per_node: 6 
+  fs: 'xfs'
+  mkfs_opts: '-f -i size=2048'
+  mount_opts: '-o inode64,noatime,logbsize=256k'
+  conf_file: '/cbt/ceph.conf.4x1x1.fs'
+  iterations: 1
+  use_existing: True
+    #  newstore_block: True
+  clusterid: "ceph"
+  tmp_dir: "/tmp/cbt"
+  ceph-osd_cmd: "/usr/bin/ceph-osd"
+  ceph-mon_cmd: "/usr/bin/ceph-mon"
+  ceph-run_cmd: "/usr/bin/ceph-run"
+  rados_cmd: "/usr/bin/rados"
+  ceph_cmd: "/usr/bin/ceph"
+  rbd_cmd: "/usr/bin/rbd"
+  ceph-mgr_cmd: "/usr/bin/ceph-mgr"
+  pdsh_ssh_args: "-a -x -l%u %h"
+
+benchmarks:
+#  radosbench:
+#    op_size: [4194304, 4096]
+#    write_only: False
+#    time: 600
+#    concurrent_ops: [32]
+#    concurrent_procs: 2 
+#    osd_ra: [4096]
+#    pool_profile: 'replication'
+
+
+  librbdfio:
+    time: 120
+    precond_time: 600
+    ramp: 30
+    time_based: True
+    norandommap: True
+    vol_size: 70000
+    hit_size: 1000
+    use_existing_volumes: True
+    procs_per_volume: [1]
+    volumes_per_client: [6]
+    osd_ra: [4096]
+    cmd_path: '/usr/local/bin/fio'
+    poolname: 'rbd_replicated' 
+    log_iops: True
+    log_bw:  True
+    log_lat: True
+    fio_out_format: 'json'
+    log_avg_msec: 100
+    prefill:
+      blocksize: '64k'
+      numjobs: 1
+    # Each block below uses its own local options during its execution
+    workloads:
+      precondition:
+        jobname: 'precond1rw'
+        mode: 'randwrite'
+        precond: True
+        op_size: 65536
+        numjobs: [ 1 ]
+        iodepth: [ 4 ]
+        monitor: False # whether to run the monitors along the test
+        
+      seq32kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 32768 
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ] 
+      seq32kread:
+        jobname: 'seqwrite'
+        mode: 'read'
+        op_size: 32768
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      seq256kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 262144
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      seq256kread:
+        jobname: 'seqread'
+        mode: 'write'
+        op_size: 262144
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      4kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 4096
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      4kreadhit:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 4096
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      4krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 4096
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      4krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 4096
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      8kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 8192
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      8kreadhit:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 8192
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      8krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 8192
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      8krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 8192
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 16384
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16kreadhit:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 16384
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 16384
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 16384
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1 ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16k7030:
+        jobname: 'rw'
+        mode: 'randrw'
+        op_size: 16384
+        rwmixread: 30
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      32kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 32768
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      32kreadhit:
+       jobname: 'randread'
+        mode: 'randread'
+        op_size: 32768
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      32krandomwrite: 
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 32768
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      32krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 32768
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 65536
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64kreadhit:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 65536
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 4096
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 65536
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64k7030:
+        jobname: 'rw'
+        mode: 'randrw'
+        op_size: 65536
+        rwmixread: 30
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64k3070:
+        jobname: 'rw'
+        mode: 'randrw'
+        op_size: 65536
+        rwmixread: 70
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      256kwritehit:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 262144
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      256kreadhit:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 262144
+        hit: True
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      256krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 262144
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      256krandomread:
+        jobname: 'randread'
+        mode: 'randread'
+        op_size: 262144
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ] 
+

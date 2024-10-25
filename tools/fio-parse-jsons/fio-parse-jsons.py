@@ -44,6 +44,7 @@ from operator import add
 job_type='global options/rw'
 # All the following should be within the path
 #  'jobs/jobname=*/read/iops'
+# LEE - modified to add read (which is sequential read) and write (which is sequential write)
 predef_dict = {
     "randwrite": {
         "iops": "write/iops",
@@ -70,6 +71,22 @@ predef_dict = {
         "sys_cpu": "sys_cpu",
     },
     "seqread": {
+        "bw": "read/bw",
+        "total_ios": "read/total_ios",
+        "clat_ms": "read/clat_ns",
+        "clat_stdev": "read/clat_ns",
+        "usr_cpu": "usr_cpu",
+        "sys_cpu": "sys_cpu",
+    },
+    "write": {
+        "bw": "write/bw",
+        "total_ios": "write/total_ios",
+        "clat_ms": "write/clat_ns",
+        "clat_stdev": "write/clat_ns",
+        "usr_cpu": "usr_cpu",
+        "sys_cpu": "sys_cpu",
+    },
+    "read": {
         "bw": "read/bw",
         "total_ios": "read/total_ios",
         "clat_ms": "read/clat_ns",
@@ -248,13 +265,16 @@ def process_fio_json_file(json_file, json_tree_path):
         result_dict['timestamp'] = str(node['timestamp'])
         result_dict['iodepth'] = node['global options']['iodepth']
         result_dict['jobname'] = node['global options']['rw']
-        result_dict['iodepth'] = node['global options']['iodepth']
+        # result_dict['iodepth'] = node['global options']['iodepth']
         # Use the jobname to index the predef_dict for the json query
         jobs_list = node["jobs"]
         print(f"Num jobs: {len(jobs_list)}")
         job_result = {}
         for _i, job in enumerate(jobs_list):
-            jobname = str(job["jobname"])
+            #jobname = str(job["jobname"])
+            #LEE
+            jobname = result_dict['jobname']
+
             if jobname in predef_dict:
                 # this gives the paths to query for the metrics
                 query_dict = predef_dict[jobname]
@@ -301,7 +321,7 @@ def traverse_files(sdir, config, json_tree_path):
     return dict_new
 
 
-def gen_plot(config, data, list_subtables, title):
+def gen_plot(config, data, list_subtables, title, iopsnotbw):
     """
     Generate a gnuplot script and .dat files -- assumes OSD CPU util only
     """
@@ -322,10 +342,10 @@ def gen_plot(config, data, list_subtables, title):
         },
     }
     header = """
-set terminal pngcairo size 650,420 enhanced font 'Verdana,10'
+set terminal pngcairo size 650,420 enhanced font 'Arial,14'
 set key box left Left noreverse title 'Iodepth'
 set datafile missing '-'
-set key outside horiz bottom center box noreverse noenhanced autotitle
+set key outside horiz bottom left box noreverse noenhanced autotitle
 set grid
 set autoscale
 #set logscale
@@ -339,6 +359,11 @@ set style function linespoints
     # Gnuplot quirk: '_' is interpreted as a sub-index:
     _title = title.replace("_", "-")
 
+    if iopsnotbw is True:
+       xlabel="IOP/s"
+    else:
+       xlabel="Bandwidth(MB/s)"
+
     with open(out_plot, "w") as f:
         f.write(header)
         for pk in plot_dict.keys():
@@ -349,12 +374,12 @@ set style function linespoints
             y2col = plot_dict[pk]["y2column"]
             template += f"""
 set ylabel "{ylabel}"
-set xlabel "IOPS"
+set xlabel "{xlabel}"
 set y2label "{y2label}"
 set ytics nomirror
 set y2tics
 set tics out
-set autoscale y
+set yrange [0:70] noextend
 set autoscale y2
 set output '{out_chart}'
 set title "{_title}"
@@ -386,6 +411,7 @@ def initial_fio_table(dict_files, multi):
     """
     table = {}
     avg = {}
+
     # Traverse each json sample
     for name in dict_files.keys():
         item = dict_files[name]
@@ -398,9 +424,14 @@ def initial_fio_table(dict_files, multi):
                 table[k] = []
             table[k].append(item[k])
             if multi:
-                if k not in table:
+                if k not in avg:
                     avg[k] = 0.0
-                avg[k] += item[k]
+# LEE fix here
+                print( "LEE1" )
+                print( item[k] )
+                avg[k] += float(item[k])
+                print( avg[k] )
+
     # Probably might use some other avg rather than arithmetic avg
     # For a sinlge data point, table == avg
     # For multiple FIO: probably want to do the same reduction as multi job
@@ -496,7 +527,9 @@ def gen_table(dict_files, config, title, avg_cpu, multi=False):
     # our naming convention to identify this:
     # fio_crimson_1osd_default_8img_fio_unrest_2job_16io_4k_randread_p5.json
     for name in dict_files.keys():
-        m = re.match(r".*(?P<job>\d+)job_(?P<io>\d+)io_", name)
+    #    m = re.match(r".*(?P<job>\d+)job_(?P<io>\d+)io_", name)
+        #LEE 
+        m = re.match(r".*iodepth-(?P<io>\d+)\/numjobs-(?P<job>\d+)\/output\..",name) 
         if m:
             # Note: 'job' (num threads) is constant within  each table,
             # each row corresponds to increasing the iodepth, that is, each
@@ -537,7 +570,13 @@ def gen_table(dict_files, config, title, avg_cpu, multi=False):
     wiki += "|}\n"
     print(f" Wiki table: {title}")
     print(wiki)
-    gen_plot(config, gplot, list_subtables, title)
+
+    if "iops" in table.keys():
+       iopsnotbw = True
+    else:
+       iopsnotbw = False
+
+    gen_plot(config, gplot, list_subtables, title, iopsnotbw)
     print("Done")
 
 
@@ -631,5 +670,10 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     dict_files = main(args.directory, args.config, args.query)
-    avg_cpu = load_avg_cpu_json(args.average)
+    #LEE 
+    if args.average:
+       avg_cpu = load_avg_cpu_json(args.average)
+    else:
+       avg_cpu = []
+
     gen_table(dict_files, args.config, args.title, avg_cpu, args.multi)

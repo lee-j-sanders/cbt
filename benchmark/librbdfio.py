@@ -28,6 +28,7 @@ class LibrbdFio(Benchmark):
         self.recov_test_type = config.get('recov_test_type', 'blocking')
         self.data_pool_profile = config.get('data_pool_profile', None)
         self.time = config.get('time', None)
+        self.precond_time = config.get('precond_time',None )
         # Global FIO options can be overwritten for specific workload options
         # would be nice to have them as a separate class -- future PR
         self.time_based = bool(config.get('time_based', False))
@@ -64,6 +65,7 @@ class LibrbdFio(Benchmark):
             self.backup_global_fio_options()
         self.prefill_vols = config.get('prefill', {'blocksize': '4M',
                                               'numjobs': '1'})
+
         self.total_procs =  (self.procs_per_volume * self.volumes_per_client *
                              len(settings.getnodes('clients').split(',')))
         self.base_run_dir = self.run_dir # we need this for the new workloads block
@@ -146,7 +148,7 @@ class LibrbdFio(Benchmark):
         logger.info('Creating fio images...')
         self.mkimages()
         logger.info('Attempting to prefill fio images...')
-        self.prefill()
+        # LEE disabled self.prefill()
 
 
     def run_workloads(self):
@@ -162,30 +164,58 @@ class LibrbdFio(Benchmark):
             if 'monitor' in test:
                 enable_monitor = bool(test['monitor'])
             # TODO: simplify this loop to have a single iterator for general queu depth
-            for job in test['numjobs']:
-                for iod in test['iodepth']:
-                    self.mode = test['mode']
-                    if 'op_size' in test:
-                        self.op_size = test['op_size']
-                    self.mode = test['mode']
-                    self.numjobs = job
-                    self.iodepth = iod
-                    self.run_dir =  ( f'{self.base_run_dir}/{self.mode}_{int(self.op_size)}/'
-                                     f'iodepth-{int(self.iodepth):03d}/numjobs-{int(self.numjobs):03d}' )
-                    common.make_remote_dir(self.run_dir)
 
-                    for i in range(self.volumes_per_client):
-                        fio_cmd = self.mkfiocmd(i)
-                        p = common.pdsh(settings.getnodes('clients'), fio_cmd)
-                        ps.append(p)
-                    if enable_monitor:
-                        time.sleep(self.ramp) # ramp up time before measuring
-                        monitoring.start(self.run_dir)
-                    for p in ps:
-                        p.wait()
-                    if enable_monitor:
-                        monitoring.stop(self.run_dir)
-                    self.restore_global_fio_options()
+            #print type( test['iodepth'] )
+
+            # for iod in test['iodepth']:
+            #    d = test['iodepth']
+            #    print( iod )
+            #    print( type( iod ) )
+            #    print( d.keys().index[d] ) 
+
+            # for job in test['numjobs']:
+            # for iod in test['iodepth']:
+
+            if 'precond' in test:
+               fioruntime = self.precond_time
+            else:
+               fioruntime = self.time 
+  
+            for i in range(len(test['iodepth'])):
+
+                iod = test['iodepth'][i]
+                job = test['numjobs'][i]
+
+                self.mode = test['mode']
+                if 'op_size' in test:
+                    self.op_size = test['op_size']
+
+                # LEE
+                if 'rwmixread' in test:
+                    self.rwmixread = test['rwmixread'] 
+                    self.rwmixwrite = 100 - self.rwmixread 
+
+                self.mode = test['mode']
+                self.numjobs = job
+                self.iodepth = iod
+
+                #LEE
+                self.run_dir =  ( f'{self.base_run_dir}/{wk}_{self.mode}_{int(self.op_size)}/'
+                                 f'iodepth-{int(self.iodepth):03d}/numjobs-{int(self.numjobs):03d}' )
+                common.make_remote_dir(self.run_dir)
+
+                for i in range(self.volumes_per_client):
+                    fio_cmd = self.mkfiocmd(i, fioruntime )
+                    p = common.pdsh(settings.getnodes('clients'), fio_cmd)
+                    ps.append(p)
+                if enable_monitor:
+                    time.sleep(self.ramp) # ramp up time before measuring
+                    monitoring.start(self.run_dir)
+                for p in ps:
+                    p.wait()
+                if enable_monitor:
+                    monitoring.stop(self.run_dir)
+                self.restore_global_fio_options()
 
         logger.info('== Workloads completed ==')
 
@@ -227,7 +257,7 @@ class LibrbdFio(Benchmark):
             logger.info('Running rbd fio %s test.', self.mode)
             ps = []
             for i in range(self.volumes_per_client):
-                fio_cmd = self.mkfiocmd(i)
+                fio_cmd = self.mkfiocmd(i,self.time )
                 p = common.pdsh(settings.getnodes('clients'), fio_cmd)
                 ps.append(p)
             for p in ps:
@@ -244,7 +274,7 @@ class LibrbdFio(Benchmark):
         self.analyze(self.out_dir)
 
 
-    def mkfiocmd(self, volnum):
+    def mkfiocmd(self, volnum, time):
         """
         Construct a FIO cmd (note the shell interpolation for the host
         executing FIO).
@@ -266,7 +296,7 @@ class LibrbdFio(Benchmark):
         if (self.mode == 'readwrite' or self.mode == 'randrw'):
             fio_cmd += ' --rwmixread=%s --rwmixwrite=%s' % (self.rwmixread, self.rwmixwrite)
         if self.time is not None:
-            fio_cmd += ' --runtime=%d' % self.time
+            fio_cmd += ' --runtime=%d' % time
         if self.time_based is True:
             fio_cmd += ' --time_based'
         if self.ramp is not None:
@@ -330,12 +360,14 @@ class LibrbdFio(Benchmark):
                 self.data_pool = self.pool_name + "-data"
                 self.cluster.rmpool(self.data_pool, self.data_pool_profile)
                 self.cluster.mkpool(self.data_pool, self.data_pool_profile, 'rbd')
-        for node in common.get_fqdn_list('clients'):
-            for volnum in range(0, self.volumes_per_client):
-                node = node.rpartition("@")[2]
-                self.cluster.mkimage( f'cbt-librbdfio-{node}-{volnum:d}',
-                                     self.vol_size, self.pool_name, self.data_pool,
-                                     self.vol_object_size)
+
+            # LEE - was outdented to always run
+            for node in common.get_fqdn_list('clients'):
+                for volnum in range(0, self.volumes_per_client):
+                    node = node.rpartition("@")[2]
+                    self.cluster.mkimage( f'cbt-librbdfio-{node}-{volnum:d}',
+                                          self.vol_size, self.pool_name, self.data_pool,
+                                          self.vol_object_size)
         monitoring.stop()
 
 
@@ -343,8 +375,11 @@ class LibrbdFio(Benchmark):
         """
         Execute a FIO cmd to prefill the volumes
         """
+        logger.info("Prefilling volumes") 
+         
         ps = []
-        if not self.use_existing_volumes:
+        # LEE - was not self.use_existing_volumes
+        if self.use_existing_volumes:
             for volnum in range(self.volumes_per_client):
                 rbd_name = f'cbt-librbdfio-`{common.get_fqdn_cmd()}`-{volnum:d}'
                 pre_cmd = ''

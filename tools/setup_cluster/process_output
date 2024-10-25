@@ -1,0 +1,33 @@
+
+jsonpath=$1
+currentdir=$( pwd )
+
+if [ -z "$jsonpath" ]; then
+   jsonpath=/tmp/cbt/00000000/LibrbdFio
+fi
+
+for dir in $jsonpath/*
+do
+    for volume in $( seq 0 0 )
+    do
+        listfile=$currentdir/$(basename $dir).vol${volume}_list
+        echo $listfile
+        touch $listfile
+        for iodepth in $dir/*
+        do
+            for jobs in $iodepth/*
+            do 
+                for output in $jobs/output.$volume
+                do  
+                    echo $output >>$listfile
+                done
+            done   
+        done
+        title=$dir.vol${volume}
+        title=$(basename ${title})
+        /cbt/tools/fio-parse-jsons/fio-parse-jsons.py -c $listfile -t ${title}
+        plotname=${listfile/_list/.plot}
+        sed -i '/y2/d' ${plotname}
+        gnuplot ${plotname}
+    done
+done
