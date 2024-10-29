@@ -45,7 +45,7 @@ benchmarks:
     ramp: 30
     time_based: True
     norandommap: True
-    vol_size: 420000
+    vol_size: 210000
     use_existing_volumes: True
     procs_per_volume: [1]
     volumes_per_client: [1]
@@ -88,7 +88,7 @@ benchmarks:
         mode: 'write'
         op_size: 262144
         numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
-        iodepth: [ 1, 2, 3, 5, 8, 12, 16, 24, 32, 48, 64 ]
+        iodepth: [ 1, 2, 3, 5, 8, 12, 16, 24, 32, 40, 48 ]
       seq256kread:
         jobname: 'seqread'
         mode: 'read'
@@ -191,7 +191,7 @@ benchmarks:
         mode: 'write'
         op_size: 65536
         numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
-        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 48, 64 ]
       64kseqread:
         jobname: 'read'
         mode: 'read'
@@ -229,7 +229,7 @@ benchmarks:
         mode: 'randwrite'
         op_size: 262144
         numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
-        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 12, 16, 20, 24, 32 ]
       256krandomread:
         jobname: 'randread'
         mode: 'randread'

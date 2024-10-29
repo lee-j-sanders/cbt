@@ -62,6 +62,14 @@ predef_dict = {
         "usr_cpu": "usr_cpu",
         "sys_cpu": "sys_cpu",
     },
+    "randrw": {
+        "iops": [ "write/iops", "read/iops" ],
+        "total_ios": [ "write/total_ios", "read/iops" ],
+        "clat_ms": [ "write/clat_ns", "read/clat_ns" ],
+        "clat_stdev": [ "write/clat_ns", "read/clat_ns" ],
+        "usr_cpu": [ "usr_cpu", "" ],
+        "sys_cpu": [ "sys_cpu", "" ],
+    }, 
     "seqwrite": {
         "bw": "write/bw",
         "total_ios": "write/total_ios",
@@ -96,6 +104,35 @@ predef_dict = {
     },
 }
 
+scale_dict = {
+        "seq32kwrite" : 40,
+        "seq32kread": 30,
+        "seq256kwrite": 70,
+        "seq256kread" : 30,
+        "seq4kwrite" : 20,
+        "seq4kread" : 30,
+        "seq8kwrite" : 30,
+        "seq8kread" : 30, 
+        "seq16kwrite" : 40, 
+        "seq16kread" : 30,
+        "4krandomwrite" : 40,
+        "4krandomread" : 20,
+        "8krandomwrite" : 50,
+        "8krandomread" : 10,
+        "16krandomwrite" : 40,
+        "16krandomread" : 20,
+        "32krandomwrite" : 50,
+        "32krandomread" : 20,
+        "16k7030" : 30, 
+        "64kseqwrite" : 60, 
+        "64kseqread" : 30,
+        "64krandomwrite" : 70,
+        "64krandomread" : 20,
+        "64k7030" : 50, 
+        "64k3070" : 60,
+        "256krandomwrite" : 60,
+        "256krandomread" : 30, 
+        }
 
 def filter_json_node(next_branch, jnode_list_in):
     """
@@ -274,6 +311,9 @@ def process_fio_json_file(json_file, json_tree_path):
             #jobname = str(job["jobname"])
             #LEE
             jobname = result_dict['jobname']
+            print("LEE0")
+            print( _i )
+            print( jobname )
 
             if jobname in predef_dict:
                 # this gives the paths to query for the metrics
@@ -283,6 +323,9 @@ def process_fio_json_file(json_file, json_tree_path):
                 query_dict = predef_dict[jobname]
             #result_dict["jobname"] = jobname
             for k in query_dict.keys():
+                print("LEE1")
+                print(k )
+                print(query_dict[k])
                 json_tree_path = query_dict[k].split("/")
                 next_node_list = [job]
 
@@ -291,6 +334,8 @@ def process_fio_json_file(json_file, json_tree_path):
                 item = process_fio_item(k, next_node_list)
                 if k not in job_result:
                     job_result[k] = []
+                print("LEE2")
+                print(item)
                 job_result[k].append(item)
 
         reduced = reduce_result_list(job_result, result_dict["jobname"])
@@ -359,6 +404,13 @@ set style function linespoints
     # Gnuplot quirk: '_' is interpreted as a sub-index:
     _title = title.replace("_", "-")
 
+    wk = _title.split("-") 
+    if wk[0] in scale_dict:
+        yscale = scale_dict[wk[0]]
+    else:
+        yscale = 70
+    print( yscale )
+
     if iopsnotbw is True:
        xlabel="IOP/s"
     else:
@@ -379,7 +431,7 @@ set y2label "{y2label}"
 set ytics nomirror
 set y2tics
 set tics out
-set yrange [0:70] noextend
+set yrange [0:{yscale}] noextend
 set autoscale y2
 set output '{out_chart}'
 set title "{_title}"
@@ -388,7 +440,7 @@ set title "{_title}"
             # This list_subtables indicates how many sub-tables the .datfile will have
             # The stdev is the error column:5
             if len(list_subtables) > 0:
-                head = f"plot '{out_data}' index 0 using 2:{ycol}:5 t '{list_subtables[0]} q-depth' w yerr axes x1y1"
+                head = f"plot '{out_data}' index 0 using 2:{ycol}:5 t 'Fio Jobs {list_subtables[0]} StdDev/ms' w yerr axes x1y1"
                 head += f",\\\n '' index 0 using 2:{ycol}:5 notitle w lp axes x1y1"
                 head += f",\\\n '' index 0 using 2:{y2col} w lp axes x1y2 t 'CPU%'"
                 tail = ",\\\n".join([

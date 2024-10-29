@@ -1,7 +1,7 @@
 #! /bin/bash
 # Specify strip_unit, 4k, 64k or 256k as parameter 1, default is 4K
 
-debug=""
+debug="echo"
 cephcmd="ceph"
 rbdcmd="rbd"
 
@@ -9,14 +9,16 @@ typeset -i k=6
 
 typeset -i drivesize=210000 #in megabytes
 typeset -i fillpc=50
-typeset -i numvols=6
+typeset -i numvols=1
+typeset -i copies=3
 
 # Working out the volume size based on
 #(  Number of K drives * drive size ) /numvols 
 
 typeset -i a=$drivesize*$k
-typeset -i b=$a*$fillpc/100
-typeset -i volsize=$b/$numvols
+typeset -i b=$a/$copies
+typeset -i c=$b*$fillpc/100
+typeset -i volsize=$c/$numvols
 
 # need to recalculate the number of PGs with this page if 
 # the number of OSDs changes:
@@ -29,8 +31,8 @@ $debug $cephcmd orch apply osd --all-available-devices
 # $debug $cephcmd config set global mon_allow_pool_size_one true
 
 $debug $cephcmd osd pool create rbd_replicated replicated
-# $debug $cephcmd osd pool set rbd_replicated size 1 --yes-i-really-mean-it
-# $debug $cephcmd osd pool set rbd replicated_size min_size 1
+$debug $cephcmd osd pool set rbd_replicated size 3 
+$debug $cephcmd osd pool set rbd_replicated min_size 3
 
 $debug $cephcmd osd pool application enable rbd_replicated rbd
 
