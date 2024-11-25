@@ -1,0 +1,56 @@
+#! /bin/bash
+
+hostname=$(hostname -f)
+volname="cbt-librbdfio-$hostname-0"
+filename="cbt-librbdfio-$hostname-file-0"
+
+typeset -i qd=0
+
+outfile=/tmp/results.out
+
+for i in 4096 8192 16384 32768 65536 131072 262144
+do
+    echo "------------------------------------------" >>$outfile
+    echo "------- TEST sequential write $i ---------" >>$outfile
+    echo "------- TEST sequential write $i ---------" 
+  
+    case $i in
+	    4096) qd=256
+		  ;;
+            8192) qd=192
+		  ;; 		
+            16384) qd=192
+		  ;;
+            32768) qd=128
+		  ;;
+	    65536) qd=128
+                  ;;
+            131072) qd=128
+  		  ;;
+            262144) qd=128
+                  ;;		  
+            :)
+		  printf "unrecognised IO size"
+		  exit 1
+		  ;;
+    esac
+
+    echo /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename >>$outfile
+
+    echo "-------- EMPTY test -----------" >>$outfile
+    echo "-------- EMPTY test -----------"
+
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+
+    echo "-------- overwrite test -----------" >>$outfile
+    echo "-------- overwrite test -----------"
+
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+
+    cephadm shell rbd rm rbd_replicated/$volname
+    cephadm shell rbd create --pool rbd_replicated --data-pool rbd_erasure --size 410000 $volname
+
+    /root/configceph2
+
+done
+

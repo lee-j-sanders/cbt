@@ -1,7 +1,7 @@
 #! /bin/bash
 # Specify strip_unit, 4k, 64k or 256k as parameter 1, default is 4K
 
-debug="echo"
+debug=""
 cephcmd="ceph"
 rbdcmd="rbd"
 
@@ -30,9 +30,19 @@ $debug $cephcmd config set mgr mgr/cephadm/use_repo_digest false
 $debug $cephcmd orch apply osd --all-available-devices
 # $debug $cephcmd config set global mon_allow_pool_size_one true
 
-$debug $cephcmd osd pool create rbd_replicated replicated
+$debug $cephcmd osd pool create rbd_replicated 256 256 replicated 
 $debug $cephcmd osd pool set rbd_replicated size 3 
 $debug $cephcmd osd pool set rbd_replicated min_size 3
+
+$debug $cephcmd osd pool set noautoscale
+
+$debug $cephcmd balancer off
+
+$debug $cephcmd osd set nodeep-scrub
+
+$debug $cephcmd osd set noscrub
+
+$debug $cephcmd config set global osd_max_markdown_count 99999999
 
 $debug $cephcmd osd pool application enable rbd_replicated rbd
 

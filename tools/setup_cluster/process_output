@@ -25,7 +25,7 @@ do
         done
         title=$dir.vol${volume}
         title=$(basename ${title})
-        /cbt/tools/fio-parse-jsons/fio-parse-jsons.py -c $listfile -t ${title}
+        /cbt.lee/tools/fio-parse-jsons/fio-parse-jsons.py -c $listfile -t ${title}
         plotname=${listfile/_list/.plot}
         sed -i '/y2/d' ${plotname}
         gnuplot ${plotname}

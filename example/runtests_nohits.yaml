@@ -28,6 +28,10 @@ cluster:
   ceph-mgr_cmd: "/usr/bin/ceph-mgr"
   pdsh_ssh_args: "-a -x -l%u %h"
 
+monitoring_profiles:
+  collectl:
+     args: '-c 18 -sCD -i 10 -P -oz -F0 --rawtoo --sep ";" -f {collectl_dir}'
+
 benchmarks:
 #  radosbench:
 #    op_size: [4194304, 4096]
@@ -99,8 +103,8 @@ benchmarks:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 4096
-        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
-        iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192 ] 
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1, 1  ]
+        iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192, 256 ] 
       seq4kread:
         jobname: 'seqread'
         mode: 'read'
@@ -111,8 +115,8 @@ benchmarks:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 8192
-        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
-        iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192 ] 
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1, 1  ]
+        iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192, 256 ] 
       seq8kread:   
         jobname: 'seqread'
         mode: 'read'

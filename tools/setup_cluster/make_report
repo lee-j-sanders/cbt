@@ -1,0 +1,62 @@
+#! /bin/bash
+
+reportdir=$1
+reporttitle=$2
+currentdir=$( pwd )
+
+if [ -z "$reportdir" ]; then
+   reportdir=/tmp/cbt/00000000/LibrbdFio
+fi
+
+reportname=$1/reportfile.md
+
+rm -f ${reportname}
+
+echo "# Performance Report" >>$reportname
+echo " "       >>$reportname
+echo "## Summary of Results" >>$reportname
+echo " "       >>$reportname
+
+# TBD - generate table of results
+
+echo "| Workload | Result  |" >>$reportname
+echo "| :------- | ------: |" >>$reportname
+for filename in $reportdir/*.dat
+do
+    file=$( basename $filename )
+    workload1=${file%_*}
+    workload2=${workload1%_*}
+    
+    result=$( tail -n +3 $filename | awk '{ print $2 }' | sort -rg | head -n 1 )
+    latency=$( grep $result $filename | awk '{ print $4 }' ) 
+
+    if [[ $filename =~ "seq" ]]; then
+	    wl="MB/s"
+    else
+            wl="iop/s"
+    fi
+
+    echo "| ${workload2} | ${result} ${wl} @ ${latency}ms|" >>${reportname}
+done
+
+echo " " >>$reportname
+
+echo "## Response Curves" >>$reportname
+echo " " >>$reportname
+
+for rc in $reportdir/*sys*.png
+do
+    file=$( basename $rc )
+    workload=${file%%_*}
+
+    echo "## ${workload}"  >>${reportname}
+
+    echo " " >>${reportname}
+
+    echo "![${workload}]($rc)" >>${reportname}
+  
+    echo " " >>${reportname}
+done
+
+pandoc -f markdown-implicit_figures -t pdf -o $1/${reporttitle}.pdf ${reportname}
+

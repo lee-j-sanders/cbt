@@ -1,0 +1,17 @@
+echo "----- bootstrap -----"
+cephadm --image quay.io/ceph/ceph:$1 bootstrap --single-host-defaults --log-to-file --mon-ip 9.71.45.49 --allow-mismatched-release --skip-dashboard
+
+echo "---- zaposds ----"
+sleep 5
+/root/cephscripts/zaposds
+
+echo "---- make setup ----"
+sleep 5
+cephadm shell </root/cephscripts/make_3wayreplica_setup
+
+echo "---- turn off caches etc ----"
+sleep 5
+/root/configceph2
+/root/showscheduler.sh
+
+
