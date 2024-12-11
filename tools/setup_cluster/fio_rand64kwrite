@@ -1,0 +1,1 @@
+/usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=cbt-librbdfio-`hostname -f`-0 --invalidate=0 --rw=randwrite --runtime=120 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=65536B --iodepth=144 --end_fsync=0 --norandommap

@@ -3,15 +3,15 @@ cephadm --image quay.ceph.io/ceph-ci/ceph:$1 bootstrap --single-host-defaults --
 
 echo "---- zaposds ----"
 sleep 10
-/root/cephscripts/zaposds
+/cbt.lee/tools/setup_cluster/zaposds
 
 echo "---- make setup ----"
 sleep 10
-cephadm shell </root/cephscripts/make_ec_setup.alex
+cephadm shell </cbt.lee/tools/setup_cluster/make_ec_setup.alex
 
 echo "---- turn off caches etc ----"
 sleep 5
-/root/configceph2
-/root/showscheduler.sh
+/cbt.lee/tools/setup_cluster/configceph2
+/cbt.lee/tools/setup_cluster/showscheduler.sh
 
 

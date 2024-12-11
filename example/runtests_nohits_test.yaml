@@ -1,0 +1,89 @@
+cluster:
+  user: 'root'
+  head: "cephalasquad6.ssd.hursley.ibm.com"
+  clients: ["cephalasquad6.ssd.hursley.ibm.com"]
+  osds: ["cephalasquad6.ssd.hursley.ibm.com"]
+  mons:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: "9.71.45.49:6789"
+  mgrs:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: ~
+  osds_per_node: 6 
+  fs: 'xfs'
+  mkfs_opts: '-f -i size=2048'
+  mount_opts: '-o inode64,noatime,logbsize=256k'
+  conf_file: '/cbt/ceph.conf.4x1x1.fs'
+  iterations: 1
+  use_existing: True
+    #  newstore_block: True
+  clusterid: "ceph"
+  tmp_dir: "/tmp/cbt"
+  ceph-osd_cmd: "/usr/bin/ceph-osd"
+  ceph-mon_cmd: "/usr/bin/ceph-mon"
+  ceph-run_cmd: "/usr/bin/ceph-run"
+  rados_cmd: "/usr/bin/rados"
+  ceph_cmd: "/usr/bin/ceph"
+  rbd_cmd: "/usr/bin/rbd"
+  ceph-mgr_cmd: "/usr/bin/ceph-mgr"
+  pdsh_ssh_args: "-a -x -l%u %h"
+
+monitoring_profiles:
+  collectl:
+     args: '-c 18 -sCD -i 10 -P -oz -F0 --rawtoo --sep ";" -f {collectl_dir}'
+
+benchmarks:
+#  radosbench:
+#    op_size: [4194304, 4096]
+#    write_only: False
+#    time: 600
+#    concurrent_ops: [32]
+#    concurrent_procs: 2 
+#    osd_ra: [4096]
+#    pool_profile: 'replication'
+
+
+  librbdfio:
+    time: 30
+    precond_time: 120
+    ramp: 30
+    time_based: True
+    norandommap: True
+    vol_size: 420000
+    use_existing_volumes: True
+    procs_per_volume: [1]
+    volumes_per_client: [1]
+    osd_ra: [4096]
+    cmd_path: '/usr/local/bin/fio'
+    poolname: 'rbd_replicated' 
+    log_iops: True
+    log_bw:  True
+    log_lat: True
+    fio_out_format: 'json'
+    log_avg_msec: 100
+    prefill:
+      blocksize: '64k'
+      numjobs: 1
+    # Each block below uses its own local options during its execution
+    workloads:
+      precondition:
+        jobname: 'precond1rw'
+        mode: 'randwrite'
+        precond: True
+        op_size: 65536
+        numjobs: [ 1 ]
+        iodepth: [ 4 ]
+        monitor: False # whether to run the monitors along the test
+        
+      seq32kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 32768 
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ] 
+      seq32kread:
+        jobname: 'seqread'
+        mode: 'read'
+        op_size: 32768
+        numjobs: [ 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1  ]
+        iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192 ]

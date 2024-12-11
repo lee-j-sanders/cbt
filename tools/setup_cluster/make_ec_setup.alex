@@ -7,7 +7,7 @@ rbdcmd="rbd"
 
 stripe_unit=$1
 if [ -z "$stripe_unit" ]; then
-   stripe_unit=256K
+   stripe_unit=4K
 fi 
 
 typeset -i k=4
@@ -69,6 +69,8 @@ sleep 10
 
 $debug $cephcmd osd pool set rbd_replicated size 3
 $debug $cephcmd osd pool set rbd_replicated min_size 3
+
+$debug $cephcmd config set client rbd_io_scheduler none
 
 $debug $rbdcmd pool init rbd_erasure
 sleep 5

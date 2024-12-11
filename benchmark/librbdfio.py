@@ -231,11 +231,11 @@ class LibrbdFio(Benchmark):
         time.sleep(5)
         # If the pg autoscaler kicks in before starting the test,
         # wait for it to complete. Otherwise, results may be skewed.
-        ret = self.cluster.check_pg_autoscaler(self.wait_pgautoscaler_timeout,
-                                               f"{self.run_dir}/pgautoscaler.log")
-        if ret == 1:
-            logger.warn("PG autoscaler taking longer to complete."
-                        "Continuing anyway...results may be skewed.")
+        # ret = self.cluster.check_pg_autoscaler(self.wait_pgautoscaler_timeout,
+        #                                       f"{self.run_dir}/pgautoscaler.log")
+        #if ret == 1:
+        #    logger.warn("PG autoscaler taking longer to complete."
+        #                "Continuing anyway...results may be skewed.")
         # Start the recovery thread if requested
         if 'recovery_test' in self.cluster.config:
             if self.recov_test_type == 'blocking':

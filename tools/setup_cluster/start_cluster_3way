@@ -7,11 +7,10 @@ sleep 5
 
 echo "---- make setup ----"
 sleep 5
-cephadm shell </root/cephscripts/make_3wayreplica_setup
+cephadm shell </cbt.lee/tools/setup_cluster/make_3wayreplica_setup
 
 echo "---- turn off caches etc ----"
 sleep 5
-/root/configceph2
-/root/showscheduler.sh
-
+/cbt.lee/tools/setup_cluster/configceph2
+/cbt.lee/tools/setup_cluster/showscheduler.sh
 
