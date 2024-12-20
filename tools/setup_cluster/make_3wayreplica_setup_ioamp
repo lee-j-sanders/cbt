@@ -5,24 +5,20 @@ debug=""
 cephcmd="ceph"
 rbdcmd="rbd"
 
-stripe_unit=$1
-if [ -z "$stripe_unit" ]; then
-   stripe_unit=256K
-fi 
-
-typeset -i k=4
-typeset -i m=2
+typeset -i k=6
 
 typeset -i drivesize=210000 #in megabytes
-typeset -i fillpc=50
+typeset -i fillpc=25
 typeset -i numvols=1
+typeset -i copies=3
 
 # Working out the volume size based on
 #(  Number of K drives * drive size ) /numvols 
 
 typeset -i a=$drivesize*$k
-typeset -i b=$a*$fillpc/100
-typeset -i volsize=$b/$numvols
+typeset -i b=$a/$copies
+typeset -i c=$b*$fillpc/100
+typeset -i volsize=$c/$numvols
 
 # need to recalculate the number of PGs with this page if 
 # the number of OSDs changes:
@@ -32,13 +28,13 @@ echo "volsize = $volsize"
 
 $debug $cephcmd config set mgr mgr/cephadm/use_repo_digest false
 $debug $cephcmd orch apply osd --all-available-devices
+# $debug $cephcmd config set global mon_allow_pool_size_one true
 
-$debug $cephcmd osd erasure-code-profile set reedsol plugin=jerasure k=$k m=$m technique=reed_sol_van stripe_unit=$stripe_unit crush-failure-domain=osd
+$debug $cephcmd osd pool create rbd_replicated 128 128 replicated 
+$debug $cephcmd osd pool set rbd_replicated size 3 
+$debug $cephcmd osd pool set rbd_replicated min_size 3
 
-$debug $cephcmd osd pool create rbd_erasure 64 64 erasure reedsol
-$debug $cephcmd osd pool create rbd_replicated 64 64 replicated
-
-$debug $cephcmd osd pool set noautoscale 
+$debug $cephcmd osd pool set noautoscale
 
 $debug $cephcmd balancer off
 
@@ -48,18 +44,11 @@ $debug $cephcmd osd set noscrub
 
 $debug $cephcmd config set global osd_max_markdown_count 99999999
 
-$debug $cephcmd osd pool set rbd_erasure allow_ec_overwrites true
-$debug $cephcmd osd pool set rbd_erasure allow_ec_optimizations true
-$debug $cephcmd osd pool application enable rbd_erasure rbd 
 $debug $cephcmd osd pool application enable rbd_replicated rbd
 
-$debug $cephcmd osd pool set rbd_replicated size 3
-$debug $cephcmd osd pool set rbd_replicated min_size 3
-
-$debug $rbdcmd pool init rbd_erasure
-$debug $rbdcmd pool init rbd_replicated
-
 $debug $cephcmd config set client rbd_io_scheduler none
+
+$debug $rbdcmd pool init rbd_replicated
 
 hostname=$(hostname -f)
 typeset -i endvol=$numvols-1
@@ -67,7 +56,7 @@ typeset -i endvol=$numvols-1
 for i in $(seq 0 $endvol) 
 do
    volname="cbt-librbdfio-${hostname}-${i}"
-   $debug $rbdcmd create --pool rbd_replicated --data-pool rbd_erasure --size $volsize $volname 
+   $debug $rbdcmd create --pool rbd_replicated --size $volsize $volname 
 done
 
 # Check PG autoscaler progress, make sure all are in Complete or Not In Progress state

@@ -1,0 +1,19 @@
+#! /bin/bash
+file=/tmp/$$.out
+out=/tmp/$$b.out
+cephadm shell ceph orch device ls 2>&1 | grep ssd >$file
+
+cat $file | while read -a line_array; do
+
+    host=${line_array[0]}
+    device=${line_array[1]}
+
+    echo ceph orch device zap ${host} ${device} --force >>$out
+done 
+
+echo exit >>$out
+
+cephadm shell <$out
+
+rm -f $file
+rm -f $out

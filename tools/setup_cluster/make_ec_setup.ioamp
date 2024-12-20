@@ -7,14 +7,14 @@ rbdcmd="rbd"
 
 stripe_unit=$1
 if [ -z "$stripe_unit" ]; then
-   stripe_unit=256K
+   stripe_unit=4K
 fi 
 
 typeset -i k=4
 typeset -i m=2
 
 typeset -i drivesize=210000 #in megabytes
-typeset -i fillpc=50
+typeset -i fillpc=25
 typeset -i numvols=1
 
 # Working out the volume size based on
@@ -31,35 +31,51 @@ typeset -i volsize=$b/$numvols
 echo "volsize = $volsize"
 
 $debug $cephcmd config set mgr mgr/cephadm/use_repo_digest false
+sleep 10
 $debug $cephcmd orch apply osd --all-available-devices
+sleep 120
 
 $debug $cephcmd osd erasure-code-profile set reedsol plugin=jerasure k=$k m=$m technique=reed_sol_van stripe_unit=$stripe_unit crush-failure-domain=osd
+sleep 10
 
 $debug $cephcmd osd pool create rbd_erasure 64 64 erasure reedsol
+sleep 10
 $debug $cephcmd osd pool create rbd_replicated 64 64 replicated
+sleep 10
 
 $debug $cephcmd osd pool set noautoscale 
+sleep 10
 
 $debug $cephcmd balancer off
+sleep 10
 
 $debug $cephcmd osd set nodeep-scrub
+sleep 10
 
 $debug $cephcmd osd set noscrub
+sleep 10
 
 $debug $cephcmd config set global osd_max_markdown_count 99999999
+sleep 10
 
 $debug $cephcmd osd pool set rbd_erasure allow_ec_overwrites true
+sleep 10
 $debug $cephcmd osd pool set rbd_erasure allow_ec_optimizations true
+sleep 10
 $debug $cephcmd osd pool application enable rbd_erasure rbd 
+sleep 10
 $debug $cephcmd osd pool application enable rbd_replicated rbd
+sleep 10
 
 $debug $cephcmd osd pool set rbd_replicated size 3
 $debug $cephcmd osd pool set rbd_replicated min_size 3
 
-$debug $rbdcmd pool init rbd_erasure
-$debug $rbdcmd pool init rbd_replicated
-
 $debug $cephcmd config set client rbd_io_scheduler none
+
+$debug $rbdcmd pool init rbd_erasure
+sleep 5
+$debug $rbdcmd pool init rbd_replicated
+sleep 5
 
 hostname=$(hostname -f)
 typeset -i endvol=$numvols-1

@@ -27,7 +27,7 @@ do
                   ;;
             131072) qd=96
   		  ;;
-            262144) qd=96
+            262144) qd=48
                   ;;		  
             :)
 		  printf "unrecognised IO size"
@@ -40,17 +40,18 @@ do
     echo "-------- EMPTY test -----------" >>$outfile
     echo "-------- EMPTY test -----------"
 
-    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=120 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
 
     echo "-------- overwrite test -----------" >>$outfile
     echo "-------- overwrite test -----------"
 
-    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=120 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
 
     cephadm shell rbd rm rbd_replicated/$volname
     cephadm shell rbd create --pool rbd_replicated --data-pool rbd_erasure --size 410000 $volname
 
-    /root/configceph2
+    /cbt.lee/tools/setup_cluster/configceph2
+    /cbt.lee/tools/setup_cluster/showscheduler.sh
 
 done
 

@@ -1,0 +1,11 @@
+typeset -i count=0
+while true
+do
+echo "Retrieving stats ${count}"
+date >> /tmp/bluestore.iocounts.out
+cephadm shell < /cbt.lee/tools/setup_cluster/get_bluestore_counts2b  >>/tmp/bluestore.iocounts.out
+count=count+1
+echo "Sleeping for 30 seconds"
+sleep 30
+done
+

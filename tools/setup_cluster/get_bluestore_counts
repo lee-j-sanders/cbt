@@ -1,0 +1,15 @@
+typeset -i count=0
+while true
+do
+echo "Retrieving stats ${count}"
+date >> /tmp/bluestore.iocounts.out
+for i in 0 1 2 3 4 5
+do
+echo "OSD ${i}" >>/tmp/bluestore.iocounts.out
+cephadm shell ceph tell osd.$i perf dump | jq .bluefw.write_count_wal,.bluefs.write_count,.bluefs.log_write_count >>/tmp/bluestore.iocounts.out
+done
+count=count+1
+echo "Sleeping for 30 seconds"
+sleep 30
+done
+

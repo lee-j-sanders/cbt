@@ -1,0 +1,6 @@
+for i in 0 1 2 3 4 5
+do
+echo "---- OSD $i ----"
+ceph tell osd.$i perf dump | jq .bluefs.write_count_wal,.bluefs.write_count,.bluefs.log_write_count 
+done
+exit

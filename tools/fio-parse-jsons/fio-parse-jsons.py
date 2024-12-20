@@ -109,7 +109,7 @@ scale_dict = {
         "seq32kread": 30,
         "seq256kwrite": 70,
         "seq256kread" : 30,
-        "seq4kwrite" : 20,
+        "seq4kwrite" : 40,
         "seq4kread" : 30,
         "seq8kwrite" : 30,
         "seq8kread" : 30, 
@@ -132,6 +132,14 @@ scale_dict = {
         "64k3070" : 60,
         "256krandomwrite" : 60,
         "256krandomread" : 30, 
+        "512krandomwrite" : 70,
+        "512krandomread" : 70,
+        "512kseqwrite" : 70,
+        "512kseqread" : 70,
+        "1Mrandomwrite" : 70,
+        "1Mrandomread" : 70,
+        "1Mseqwrite": 70,
+        "1Mseqread": 70,
         }
 
 def filter_json_node(next_branch, jnode_list_in):
@@ -388,7 +396,6 @@ def gen_plot(config, data, list_subtables, title, iopsnotbw):
     }
     header = """
 set terminal pngcairo size 650,420 enhanced font 'Arial,14'
-set key box left Left noreverse title 'Iodepth'
 set datafile missing '-'
 set key outside horiz bottom left box noreverse noenhanced autotitle
 set grid
@@ -440,7 +447,7 @@ set title "{_title}"
             # This list_subtables indicates how many sub-tables the .datfile will have
             # The stdev is the error column:5
             if len(list_subtables) > 0:
-                head = f"plot '{out_data}' index 0 using 2:{ycol}:5 t 'Fio Jobs {list_subtables[0]} StdDev/ms' w yerr axes x1y1"
+                head = f"plot '{out_data}' index 0 using 2:{ycol}:5 t 'StdDev/ms' w yerr axes x1y1"
                 head += f",\\\n '' index 0 using 2:{ycol}:5 notitle w lp axes x1y1"
                 head += f",\\\n '' index 0 using 2:{y2col} w lp axes x1y2 t 'CPU%'"
                 tail = ",\\\n".join([

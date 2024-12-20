@@ -1,0 +1,1 @@
+/usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=cbt-librbdfio-`hostname -f`-0 --invalidate=0  --rw=write --numjobs=1 --bs=64k --size 210000M --name=cbt-librbdfio-`hostname -f`-file-0
