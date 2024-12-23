@@ -1,0 +1,57 @@
+#! /bin/bash
+
+hostname=$(hostname -f)
+volname="cbt-librbdfio-$hostname-0"
+filename="cbt-librbdfio-$hostname-file-0"
+
+typeset -i qd=0
+
+outfile=/tmp/results.out
+
+for i in 16384 16384 16384
+do
+    echo "------------------------------------------" >>$outfile
+    echo "------- TEST sequential write $i ---------" >>$outfile
+    echo "------- TEST sequential write $i ---------" 
+  
+    case $i in
+	    4096) qd=192
+		  ;;
+            8192) qd=144
+		  ;; 		
+            16384) qd=144
+		  ;;
+            32768) qd=96
+		  ;;
+	    65536) qd=96
+                  ;;
+            131072) qd=96
+  		  ;;
+            262144) qd=48
+                  ;;		  
+            :)
+		  printf "unrecognised IO size"
+		  exit 1
+		  ;;
+    esac
+
+    echo /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=180 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename >>$outfile
+
+    echo "-------- EMPTY test -----------" >>$outfile
+    echo "-------- EMPTY test -----------"
+
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=120 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+
+    echo "-------- overwrite test -----------" >>$outfile
+    echo "-------- overwrite test -----------"
+
+    /usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=$volname --invalidate=0 --rw=write --runtime=120 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=${i}B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=$filename 2>&1 1>>$outfile 
+
+    cephadm shell rbd rm rbd_replicated/$volname
+    cephadm shell rbd create --pool rbd_replicated --data-pool rbd_erasure --size 410000 $volname
+
+    /cbt.lee/tools/setup_cluster/configceph2
+    /cbt.lee/tools/setup_cluster/showscheduler.sh
+
+done
+
