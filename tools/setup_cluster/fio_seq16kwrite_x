@@ -1,0 +1,4 @@
+qd=$1
+vol=$2
+
+/usr/local/bin/fio --ioengine=rbd --clientname=admin --pool=rbd_replicated --rbdname=cbt-librbdfio-`hostname -f`-${vol} --invalidate=0 --rw=write --runtime=300 --time_based --ramp_time=30 --numjobs=1 --direct=1 --bs=16384B --iodepth=${qd} --end_fsync=0 --norandommap --log_avg_msec=100 --name=cbt-librbdfio-`hostname -f`-file-${vol}

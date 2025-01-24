@@ -3,7 +3,7 @@ cephadm --image quay.io/ceph/ceph:$1 bootstrap --single-host-defaults --log-to-f
 
 echo "---- zaposds ----"
 sleep 10
-/root/cephscripts/zaposds
+/cbt.lee/tools/setup_cluster/zaposds
 
 echo "---- make setup ----"
 sleep 10 

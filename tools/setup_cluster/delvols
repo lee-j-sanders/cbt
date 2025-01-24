@@ -1,0 +1,11 @@
+typeset -i numvols=12
+typeset -i endvol=$numvols-1
+
+hostname=$(hostname -f)
+
+for i in $(seq 0 $endvol)
+do
+   volname="cbt-librbdfio-${hostname}-${i}"
+   cephadm shell rbd rm rbd_replicated/$volname
+done
+

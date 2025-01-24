@@ -1,0 +1,18 @@
+echo "----- bootstrap -----" 
+cephadm --image quay.ceph.io/ceph-ci/ceph:$1 bootstrap --single-host-defaults --log-to-file --mon-ip 9.71.45.49 --allow-mismatched-release --skip-dashboard
+# --config /etc/ceph/initial-ceph.conf
+
+echo "---- zaposds ----"
+sleep 10
+/cbt.lee/tools/setup_cluster/zaposds
+
+echo "---- make setup ----"
+sleep 10
+cephadm shell </cbt.lee/tools/setup_cluster/make_ec_setup.alex.2+2
+
+echo "---- turn off caches etc ----"
+sleep 5
+/cbt.lee/tools/setup_cluster/configceph2
+/cbt.lee/tools/setup_cluster/showscheduler.sh
+
+
