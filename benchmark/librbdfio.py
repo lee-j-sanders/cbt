@@ -173,49 +173,48 @@ class LibrbdFio(Benchmark):
             #    print( type( iod ) )
             #    print( d.keys().index[d] ) 
 
-            # for job in test['numjobs']:
-            # for iod in test['iodepth']:
+            for job in test['numjobs']:
+                for iod in test['iodepth']:
 
-            if 'precond' in test:
-               fioruntime = self.precond_time
-            else:
-               fioruntime = self.time 
+                    if 'precond' in test:
+                       fioruntime = self.precond_time
+                    else:
+                       fioruntime = self.time 
   
-            for i in range(len(test['iodepth'])):
+                    # iod = test['iodepth'][i]
+                    # job = test['numjobs'][i]
 
-                iod = test['iodepth'][i]
-                job = test['numjobs'][i]
+                    self.mode = test['mode']
+                    if 'op_size' in test:
+                        self.op_size = test['op_size']
 
-                self.mode = test['mode']
-                if 'op_size' in test:
-                    self.op_size = test['op_size']
+                    # LEE
+                    if 'rwmixread' in test:
+                        self.rwmixread = test['rwmixread'] 
+                        self.rwmixwrite = 100 - self.rwmixread 
 
-                # LEE
-                if 'rwmixread' in test:
-                    self.rwmixread = test['rwmixread'] 
-                    self.rwmixwrite = 100 - self.rwmixread 
+                    self.mode = test['mode']
+                    self.numjobs = job
+                    self.iodepth = iod
 
-                self.mode = test['mode']
-                self.numjobs = job
-                self.iodepth = iod
+                    #LEE
+                    self.run_dir =  ( f'{self.base_run_dir}/{wk}_{self.mode}_{int(self.op_size)}/'
+                                      f'iodepth-{int(self.iodepth):03d}/numjobs-{int(self.numjobs):03d}' )
+                    common.make_remote_dir(self.run_dir)
 
-                #LEE
-                self.run_dir =  ( f'{self.base_run_dir}/{wk}_{self.mode}_{int(self.op_size)}/'
-                                 f'iodepth-{int(self.iodepth):03d}/numjobs-{int(self.numjobs):03d}' )
-                common.make_remote_dir(self.run_dir)
-
-                for i in range(self.volumes_per_client):
-                    fio_cmd = self.mkfiocmd(i, fioruntime )
-                    p = common.pdsh(settings.getnodes('clients'), fio_cmd)
-                    ps.append(p)
-                if enable_monitor:
-                    time.sleep(self.ramp) # ramp up time before measuring
-                    monitoring.start(self.run_dir)
-                for p in ps:
-                    p.wait()
-                if enable_monitor:
-                    monitoring.stop(self.run_dir)
-                self.restore_global_fio_options()
+                    for i in range(self.volumes_per_client):
+                        fio_cmd = self.mkfiocmd(i, fioruntime )
+# LEE fail if error - set to False if you need to enable it
+                        p = common.pdsh(settings.getnodes('clients'), fio_cmd)
+                        ps.append(p)
+                    if enable_monitor:
+                        time.sleep(self.ramp) # ramp up time before measuring
+                        monitoring.start(self.run_dir)
+                    for p in ps:
+                        p.wait()
+                    if enable_monitor:
+                        monitoring.stop(self.run_dir)
+                    self.restore_global_fio_options()
 
         logger.info('== Workloads completed ==')
 
@@ -229,6 +228,7 @@ class LibrbdFio(Benchmark):
         # dump the cluster config
         self.cluster.dump_config(self.run_dir)
         time.sleep(5)
+        #LEE
         # If the pg autoscaler kicks in before starting the test,
         # wait for it to complete. Otherwise, results may be skewed.
         # ret = self.cluster.check_pg_autoscaler(self.wait_pgautoscaler_timeout,
@@ -236,6 +236,7 @@ class LibrbdFio(Benchmark):
         #if ret == 1:
         #    logger.warn("PG autoscaler taking longer to complete."
         #                "Continuing anyway...results may be skewed.")
+        #END LEE
         # Start the recovery thread if requested
         if 'recovery_test' in self.cluster.config:
             if self.recov_test_type == 'blocking':

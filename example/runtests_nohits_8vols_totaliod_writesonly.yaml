@@ -1,0 +1,170 @@
+cluster:
+  user: 'root'
+  head: "cephalasquad6.ssd.hursley.ibm.com"
+  clients: ["cephalasquad6.ssd.hursley.ibm.com"]
+  osds: ["cephalasquad6.ssd.hursley.ibm.com"]
+  mons:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: "9.71.45.49:6789"
+  mgrs:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: ~
+  osds_per_node: 6 
+  fs: 'xfs'
+  mkfs_opts: '-f -i size=2048'
+  mount_opts: '-o inode64,noatime,logbsize=256k'
+  conf_file: '/cbt/ceph.conf.4x1x1.fs'
+  iterations: 1
+  use_existing: True
+    #  newstore_block: True
+  clusterid: "ceph"
+  tmp_dir: "/tmp/cbt"
+  ceph-osd_cmd: "/usr/bin/ceph-osd"
+  ceph-mon_cmd: "/usr/bin/ceph-mon"
+  ceph-run_cmd: "/usr/bin/ceph-run"
+  rados_cmd: "/usr/bin/rados"
+  ceph_cmd: "/usr/bin/ceph"
+  rbd_cmd: "/usr/bin/rbd"
+  ceph-mgr_cmd: "/usr/bin/ceph-mgr"
+  pdsh_ssh_args: "-a -x -l%u %h"
+
+monitoring_profiles:
+  collectl:
+     args: '-c 18 -sCD -i 10 -P -oz -F0 --rawtoo --sep ";" -f {collectl_dir}'
+
+benchmarks:
+#  radosbench:
+#    op_size: [4194304, 4096]
+#    write_only: False
+#    time: 600
+#    concurrent_ops: [32]
+#    concurrent_procs: 2 
+#    osd_ra: [4096]
+#    pool_profile: 'replication'
+
+
+  librbdfio:
+    time: 90
+    precond_time: 600
+    ramp: 30
+    time_based: True
+    norandommap: True
+    vol_size: 52500
+    use_existing_volumes: True
+    procs_per_volume: [1]
+    volumes_per_client: [8]
+    osd_ra: [4096]
+    cmd_path: '/usr/local/bin/fio'
+    poolname: 'rbd_replicated' 
+    log_iops: True
+    log_bw:  True
+    log_lat: True
+    fio_out_format: 'json'
+    log_avg_msec: 100
+    prefill:
+      blocksize: '64k'
+      numjobs: 1
+
+    # Each block below uses its own local options during its execution
+    workloads:
+      precondition:
+        jobname: 'precond1rw'
+        mode: 'randwrite'
+        precond: True
+        op_size: 65536
+        numjobs: [ 1 ]
+        total_iodepth: [ 16 ]
+        monitor: False # whether to run the monitors along the test
+        
+      seq32kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 32768 
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ] 
+      seq256kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 262144
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14 ]
+      seq4kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 4096
+        numjobs: [ 1 ]
+        total_iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192, 256 ] 
+      seq8kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 8192
+        numjobs: [ 1 ]
+        total_iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192, 256 ] 
+      seq16kwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 16384
+        numjobs: [ 1 ]
+        total_iodepth: [ 2, 4, 8, 12, 16, 24, 32, 64, 96, 128, 192 ]
+      4krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 4096
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      8krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 8192
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 16384
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      16k7030:
+        jobname: 'randmix'
+        mode: 'randrw'
+        op_size: 16384
+        rwmixread: 70
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      32krandomwrite: 
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 32768
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      64kseqwrite:
+        jobname: 'write'
+        mode: 'write'
+        op_size: 65536
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 48, 64 ]
+      64krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 65536
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 64, 128 ]
+      256krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 262144
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 8, 16, 24, 32, 48, 64, 128 ]
+      512kseqwrite:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 524288
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14 ]
+      512krandomwrite:
+        jobname: 'randwrite'
+        mode: 'randwrite'
+        op_size: 524288
+        numjobs: [ 1 ]
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 8, 12, 16, 24, 32, 40 ]
+    

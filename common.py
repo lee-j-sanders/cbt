@@ -160,6 +160,7 @@ def pdsh(nodes, command, continue_if_error=True):
         if pdsh_ssh_args:
             env = {'PDSH_SSH_ARGS':pdsh_ssh_args}
         # -f: fan out n nodes, -R rcmd name (ssh by default), -w target node list
+# LEE - add 't' and '20' if you need to up the timeout
         args = [pdsh_cmd, '-f', str(len(expanded_node_list(nodes))), '-R', 'ssh', '-w', nodes, join_nostr(command)]
         # -S means pdsh fails if any host fails
         if not continue_if_error:

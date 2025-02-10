@@ -44,7 +44,7 @@ benchmarks:
 
 
   librbdfio:
-    time: 90
+    time: 180
     precond_time: 600
     ramp: 30
     time_based: True
@@ -81,96 +81,48 @@ benchmarks:
         op_size: 32768 
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7,  8, 10, 12, 16 ] 
-      seq32kread:
-        jobname: 'seqread'
-        mode: 'read'
-        op_size: 32768
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3,  4,  5,  6,  7,  8, 10, 12, 16 ]
       seq256kwrite:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 262144
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7,  8,  9, 10, 11 ]
-      seq256kread:
-        jobname: 'seqread'
-        mode: 'read'
-        op_size: 262144
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8,  9, 10, 11 ]
       seq4kwrite:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 4096
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4,  5,  6,  7,  8, 10, 12, 16, 20 ]
-      seq4kread:
-        jobname: 'seqread'
-        mode: 'read'
-        op_size: 4096
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 6,  8,  10, 12, 14, 16, 20 ]
       seq8kwrite:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 8192
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4,  5,  6,  7,  8, 10, 12, 16, 20 ]
-      seq8kread:   
-        jobname: 'seqread'
-        mode: 'read'
-        op_size: 8192
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5,  6,  8,  10, 12, 14, 16 ]
       seq16kwrite:
         jobname: 'seqwrite'
         mode: 'write'
         op_size: 16384
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4,  5,  6,  7,  8, 10, 12, 16 ]
-      seq16kread:
-        jobname: 'seqread'
-        mode: 'read'
-        op_size: 16384
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5,  6,  7,  8,  10, 12, 16 ]
       4krandomwrite:
         jobname: 'randwrite'
         mode: 'randwrite'
         op_size: 4096
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
-      4krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 4096
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 8, 16, 20, 24, 32, 48 ]
       8krandomwrite:
         jobname: 'randwrite'
         mode: 'randwrite'
         op_size: 8192
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16  ]
-      8krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 8192
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 8, 12, 16, 20, 24, 32, 48 ] 
       16krandomwrite:
         jobname: 'randwrite'
         mode: 'randwrite'
         op_size: 16384
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
-      16krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 16384
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 8, 12, 16, 20, 24, 32, 48 ]
       16k7030:
         jobname: 'randmix'
         mode: 'randrw'
@@ -184,36 +136,18 @@ benchmarks:
         op_size: 32768
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16  ]
-      32krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 32768
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 4, 6, 8,  10, 12, 16, 20, 28, 32 ]
       64kseqwrite:
         jobname: 'write'
         mode: 'write'
         op_size: 65536
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
-      64kseqread:
-        jobname: 'read'
-        mode: 'read'
-        op_size: 65536
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4,  5,  6 ,  8, 10, 12, 16, 20  ]
       64krandomwrite:
         jobname: 'randwrite'
         mode: 'randwrite'
         op_size: 65536
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
-      64krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 65536
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 6,  8,  10, 12, 16, 20, 28 ]
       64k7030:
         jobname: 'randmix'
         mode: 'randrw'
@@ -234,21 +168,9 @@ benchmarks:
         op_size: 262144
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
-      256krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 262144
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16 ]
       512kseqwrite:
         jobname: 'seqwrite'
         mode: 'write'
-        op_size: 524288
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
-      512kseqread:
-        jobname: 'seqread'
-        mode: 'read'
         op_size: 524288
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
@@ -258,21 +180,9 @@ benchmarks:
         op_size: 524288
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
-      512krandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 524288
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
       1Mseqwrite:
         jobname: 'seqwrite'
         mode: 'write'
-        op_size: 1048576
-        numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
-      1Mseqread:
-        jobname: 'seqread'
-        mode: 'read'
         op_size: 1048576
         numjobs: [ 1 ]
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
@@ -281,11 +191,5 @@ benchmarks:
         mode: 'randwrite'
         op_size: 1048576
         numjobs: [ 1 ]
-        iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
-      1Mrandomread:
-        jobname: 'randread'
-        mode: 'randread'
-        op_size: 1048576
-        numjobs: [ 1 ]   
         iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
     

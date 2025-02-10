@@ -1,0 +1,5 @@
+for i in /dev/ceph*
+do
+lvremove -y $i
+done
+

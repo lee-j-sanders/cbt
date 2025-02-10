@@ -15,7 +15,7 @@ typeset -i m=2
 
 typeset -i drivesize=210000 #in megabytes
 typeset -i fillpc=50
-typeset -i numvols=1
+typeset -i numvols=8
 
 # Working out the volume size based on
 #(  Number of K drives * drive size ) /numvols 
