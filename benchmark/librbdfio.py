@@ -176,6 +176,7 @@ class LibrbdFio(Benchmark):
             for job in test['numjobs']:
                 for iod in test['iodepth']:
 
+                    #LEE
                     if 'precond' in test:
                        fioruntime = self.precond_time
                     else:
