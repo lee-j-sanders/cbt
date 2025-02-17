@@ -7,7 +7,7 @@ rbdcmd="rbd"
 
 stripe_unit=$1
 if [ -z "$stripe_unit" ]; then
-   stripe_unit=256K
+   stripe_unit=4K
 fi 
 
 typeset -i k=4
@@ -15,7 +15,7 @@ typeset -i m=2
 
 typeset -i drivesize=210000 #in megabytes
 typeset -i fillpc=50
-typeset -i numvols=1
+typeset -i numvols=8
 
 # Working out the volume size based on
 #(  Number of K drives * drive size ) /numvols 
@@ -32,6 +32,8 @@ echo "volsize = $volsize"
 
 $debug $cephcmd config set mgr mgr/cephadm/use_repo_digest false
 $debug $cephcmd orch apply osd --all-available-devices
+
+sleep 120
 
 $debug $cephcmd osd erasure-code-profile set reedsol plugin=jerasure k=$k m=$m technique=reed_sol_van stripe_unit=$stripe_unit crush-failure-domain=osd
 
@@ -59,7 +61,7 @@ $debug $cephcmd osd pool set rbd_replicated min_size 3
 $debug $rbdcmd pool init rbd_erasure
 $debug $rbdcmd pool init rbd_replicated
 
-$debug $cephcmd config set client rbd_io_scheduler none
+# $debug $cephcmd config set client rbd_io_scheduler none
 
 hostname=$(hostname -f)
 typeset -i endvol=$numvols-1
