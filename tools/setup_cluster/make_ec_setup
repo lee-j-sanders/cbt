@@ -61,7 +61,7 @@ $debug $cephcmd osd pool set rbd_replicated min_size 3
 $debug $rbdcmd pool init rbd_erasure
 $debug $rbdcmd pool init rbd_replicated
 
-# $debug $cephcmd config set client rbd_io_scheduler none
+$debug $cephcmd config set client rbd_io_scheduler none
 
 hostname=$(hostname -f)
 typeset -i endvol=$numvols-1

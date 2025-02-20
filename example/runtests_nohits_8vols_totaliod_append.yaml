@@ -1,0 +1,126 @@
+cluster:
+  user: 'root'
+  head: "cephalasquad6.ssd.hursley.ibm.com"
+  clients: ["cephalasquad6.ssd.hursley.ibm.com"]
+  osds: ["cephalasquad6.ssd.hursley.ibm.com"]
+  mons:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: "9.71.45.49:6789"
+  mgrs:
+    cephalasquad6.ssd.hursley.ibm.com:
+      a: ~
+  osds_per_node: 6 
+  fs: 'xfs'
+  mkfs_opts: '-f -i size=2048'
+  mount_opts: '-o inode64,noatime,logbsize=256k'
+  conf_file: '/cbt/ceph.conf.4x1x1.fs'
+  iterations: 1
+  use_existing: True
+    #  newstore_block: True
+  clusterid: "ceph"
+  tmp_dir: "/tmp/cbt"
+  ceph-osd_cmd: "/usr/bin/ceph-osd"
+  ceph-mon_cmd: "/usr/bin/ceph-mon"
+  ceph-run_cmd: "/usr/bin/ceph-run"
+  rados_cmd: "/usr/bin/rados"
+  ceph_cmd: "/usr/bin/ceph"
+  rbd_cmd: "/usr/bin/rbd"
+  ceph-mgr_cmd: "/usr/bin/ceph-mgr"
+  pdsh_ssh_args: "-a -x -l%u %h"
+
+monitoring_profiles:
+  collectl:
+     args: '-c 18 -sCD -i 10 -P -oz -F0 --rawtoo --sep ";" -f {collectl_dir}'
+
+benchmarks:
+#  radosbench:
+#    op_size: [4194304, 4096]
+#    write_only: False
+#    time: 600
+#    concurrent_ops: [32]
+#    concurrent_procs: 2 
+#    osd_ra: [4096]
+#    pool_profile: 'replication'
+
+
+  librbdfio:
+    time: 90
+    ramp: 30
+    time_based: True
+    norandommap: True
+    vol_size: 1000
+  # vol_size: 52500
+    use_existing_volumes: True
+    procs_per_volume: [1]
+    volumes_per_client: [8]
+    osd_ra: [4096]
+    cmd_path: '/usr/local/bin/fio'
+    poolname: 'rbd_replicated' 
+    log_iops: True
+    log_bw:  True
+    log_lat: True
+    fio_out_format: 'json'
+    log_avg_msec: 100
+    prefill:
+      blocksize: '64k'
+      numjobs: 1
+
+    # Each block below uses its own local options during its execution
+    workloads:
+      seq32kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 32768 
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 1, 2, 4, 8, 16, 32, 48, 64, 96, 128, 256 ] 
+      seq256kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 262144
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 8, 12, 16, 24, 32 ]
+      seq4kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 4096
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 4, 8, 16, 32, 48, 64, 96, 128, 256, 384, 512, 768 ]
+      seq8kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 8192
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 4, 8, 16, 32, 48, 64, 96, 128, 256, 384, 512, 768 ]
+      seq16kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 16384
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 2, 4, 8, 16, 24, 32, 64, 96, 128, 256, 384 ]
+      64kseqwriteappend:
+        jobname: 'write'
+        mode: 'write'
+        op_size: 65536
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 1, 2, 4, 6, 8, 16, 32, 48, 64, 96, 128 ]
+      seq512kwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 524288
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 8, 12, 16, 24, 32 ]
+      seq1Mwriteappend:
+        jobname: 'seqwrite'
+        mode: 'write'
+        op_size: 1048576
+        numjobs: [ 1 ]
+        pre_workload_script: '/cbt.lee/tools/setup_cluster/mkdelvols.cbt'
+        total_iodepth: [ 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20 ]
+

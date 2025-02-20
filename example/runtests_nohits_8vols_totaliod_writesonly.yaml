@@ -45,7 +45,6 @@ benchmarks:
 
   librbdfio:
     time: 90
-    precond_time: 600
     ramp: 30
     time_based: True
     norandommap: True
@@ -70,7 +69,7 @@ benchmarks:
       precondition:
         jobname: 'precond1rw'
         mode: 'randwrite'
-        precond: True
+        time: 600
         op_size: 65536
         numjobs: [ 1 ]
         total_iodepth: [ 16 ]

@@ -1,0 +1,15 @@
+typeset -i numvols=8
+typeset -i endvol=$numvols-1
+typeset -i volsize=52500
+
+hostname=$(hostname -f)
+
+for i in $(seq 0 $endvol)
+do
+   volname="cbt-librbdfio-${hostname}-${i}"
+   echo "Delete and recreate volume ${volname}" >>/tmp/mkdelvolumelog.out
+   date >>/tmp/mkdelvolumelog.out
+   cephadm shell rbd rm rbd_replicated/$volname
+   cephadm shell rbd create --pool rbd_replicated --data-pool rbd_erasure --size $volsize $volname
+done
+
