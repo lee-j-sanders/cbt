@@ -31,23 +31,22 @@ typeset -i volsize=$b/$numvols
 echo "volsize = $volsize"
 
 $debug $cephcmd config set mgr mgr/cephadm/use_repo_digest false
-sleep 10
 $debug $cephcmd orch apply osd --all-available-devices
 sleep 120
 
-$debug $cephcmd osd erasure-code-profile set reedsol plugin=lrc k=$k m=$m l=3 stripe_unit=$stripe_unit crush-failure-domain=osd
-sleep 10
+# $debug $cephcmd osd erasure-code-profile set reedsol plugin=clay k=$k m=$m stripe_unit=$stripe_unit crush-failure-domain=osd
+$debug $cephcmd osd erasure-code-profile set reedsol k=2 m=1 stripe_unit=$stripe_unit crush-failure-domain=osd
 
-$debug $cephcmd osd pool create unique_pool_0 64 64 erasure reedsol
-sleep 10
+$debug $cephcmd osd pool create unique_pool_0 16 16 erasure reedsol
 
 $debug $cephcmd osd pool set unique_pool_0 allow_ec_overwrites true
-sleep 10
-$debug $cephcmd osd pool application enable unique_pool_0 rbd 
-sleep 10
+$debug $cephcmd osd pool application enable unique_pool_0 rados --yes-i-really-mean-it
+# $debug $cephcmd osd set nodeep-scrub
+# $debug $cephcmd osd set noscrub
+$debug $cephcmd osd primary-affinity 0 0
+$debug $cephcmd osd pool set unique_pool_0 fast_read true
 
 $debug $rbdcmd pool init unique_pool_0
-sleep 5
 
 # Check PG autoscaler progress, make sure all are in Complete or Not In Progress state
 echo "Check PG autoscaler progress, make sure all are in Complete or Not in Progress state"

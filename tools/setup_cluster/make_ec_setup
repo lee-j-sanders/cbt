@@ -7,7 +7,7 @@ rbdcmd="rbd"
 
 stripe_unit=$1
 if [ -z "$stripe_unit" ]; then
-   stripe_unit=4K
+   stripe_unit=16K
 fi 
 
 typeset -i k=4
