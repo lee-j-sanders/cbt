@@ -1,0 +1,20 @@
+devlist="sda sdb sdc sdd sde sdf sdg sdh"
+devlist2="0 1 2 3 4 5 6 7 8"
+
+for i in $devlist
+do
+echo "mq-deadline" >/sys/block/$i/queue/scheduler
+echo 0 >/sys/block/$i/queue/nomerges
+done
+
+for i in $devlist
+do
+echo "write back" > /sys/block/$i/queue/write_cache
+done
+
+for i in $devlist2
+do
+echo "mq-deadline" >/sys/block/dm-$i/queue/scheduler
+echo "write back" >/sys/block/dm-$i/queue/write_cache
+echo 0 >/sys/block/dm-$i/queue/nomerges
+done
