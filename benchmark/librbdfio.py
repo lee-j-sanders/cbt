@@ -304,7 +304,7 @@ class LibrbdFio(Benchmark):
         ps = []
         # LEE was not self.use_existing_volumes
         if self.use_existing_volumes:
-            rbd_base_name: str = self.rbdname
+            rbd_base_name: str = options.get("rbdname", "cbt-librbdfio")
             for volnum in range(self.volumes_per_client):
                 rbd_name = f'{rbd_base_name}-`{common.get_fqdn_cmd()}`-{volnum:d}'
                 pre_cmd = ''

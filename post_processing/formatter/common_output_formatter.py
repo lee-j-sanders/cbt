@@ -89,10 +89,34 @@ class CommonOutputFormatter:
         self._find_all_testrun_ids()
         for id in self._all_test_run_ids:
             log.debug("Looking at test run with id %s" % id)
-            results: TestRunResult = TestRunResult(self._directory, id, self._filename_root)
 
-            results.process()
-            self._formatted_output.update(results.get())
+            # Actually find the test run ID directory
+            testrun_directories: list[Path] = list( self._path.glob(f"**/{id}") )
+            log.info("test_run_directories are: %s" % testrun_directories)
+            # if len(testrun_directories) > 1:
+            #    log.error("We seem to have more than one directory for test run ID %s" % id)
+            if len(testrun_directories) > 1:
+                log.info("\n\nThere are no test run directories so using alternative method\n\n")
+                # There is the potential that there is no id-xxxxxx directory, so
+                # we should try a different way
+                results: TestRunResult = TestRunResult(Path(self._directory), self._filename_root)
+                results.process()
+                self._formatted_output.update(results.get())
+            else:
+                testrun_directory_path: Path = testrun_directories[0]
+
+                for io_pattern_directory in [
+                    directory for directory in testrun_directory_path.iterdir() if directory.is_dir()
+                ]:
+                    log.debug("Looking at results for directory %s" % io_pattern_directory)
+                    results: TestRunResult = TestRunResult(io_pattern_directory, self._filename_root)
+                    results.process()
+                    processed_results = results.get()
+                    for run_type in processed_results.keys():
+                        if run_type in self._formatted_output.keys():
+                            self._formatted_output[run_type].update(processed_results[run_type])
+                        else:
+                            self._formatted_output.update(results.get())
 
         # get the max bandwidth and associated latency for each test run
         for operation in self._formatted_output.keys():
@@ -137,7 +161,7 @@ class CommonOutputFormatter:
         )
         self._path = Path(self._directory)
         # this gives a generator where each contained object is a Path of format:
-        # <self._directory>/results/<iteration>/<run_id>/json_output.<vol_id>.<hostname>
+        # <self._directory>/results/<iteration>/<run_id>/json_output.<vol_id>
         self._file_list = [
             path
             for path in self._path.glob(f"**/{self._filename_root}.*")
@@ -168,13 +192,15 @@ class CommonOutputFormatter:
             # There is a possibility that there could be more than one id-xxxxxx string in the
             # file path, and we want only one. We choose to always take the fist one.
             # If there are none then just return the directory name above the file
-            id: str = potential_ids[0]
-            if not id:
+            if len(potential_ids) > 0:
+                id: str = potential_ids[0]
+            else:
                 # if we get no matches then just use the directory directly above
                 # the output file
                 id = file_path.parts[-2]
 
             self._all_test_run_ids.add(id)
+        log.debug("Test run IDs are: %s" %self._all_test_run_ids)
 
     def _find_maximum_bandwidth_and_iops_with_latency(
         self, test_run_data: COMMON_FORMAT_FILE_DATA_TYPE
@@ -199,3 +225,12 @@ class CommonOutputFormatter:
                     iops_latency_ms = float(float(data["latency"]) / (1000 * 1000))
 
         return (f"{max_bandwidth}", f"{bandwidth_latency_ms}", f"{max_iops}", f"{iops_latency_ms}")
+
+    def _find_unique_results_directories(self) -> list[Path]:
+        """
+        Find all the unique results directories that contain data for a single
+        run
+        """
+        unique_directories: list[Path] = []
+
+        return unique_directories

@@ -12,6 +12,7 @@ Usage:
         generate_comparison_performance_report.py
                 --baseline=<full_path_to_archive_directory_to_use_as_baseline>
                 --archives=<full_path_to_results_directories_to_compare>
+                --results_file_root="ch_json_result"
                 --output_directory=<full_path_to_directory_to_store_report>
                 --create_pdf
 
@@ -67,31 +68,41 @@ log: Logger = getLogger("reports")
 
 
 def generate_intermediate_files(arguments: Namespace) -> None:
-    """ """
-    output_directory: str = f"{arguments.archive}/visualisation/"
+    """
+    If the raw fio results have not yet been post-processed then we need to do
+    that now before trying to produce te report
+    """
 
-    if not os.path.exists(output_directory) or not os.listdir(output_directory):
-        # directory doesn't exist so we need o post-process the CBT results files first
-        os.makedirs(output_directory, exist_ok=True)
+    directories_of_interest: list[str] = [f"{arguments.baseline}"]
 
-        log.debug("Creating directory %s" % output_directory)
-        os.makedirs(output_directory, exist_ok=True)
+    for directory in f"{arguments.archives}".split(","):
+        directories_of_interest.append(directory)
 
-        log.info("Generating intermediate files for %s in directory %s" % (arguments.archive, output_directory))
-        formatter: CommonOutputFormatter = CommonOutputFormatter(
-            archive_directory=arguments.archive, filename_root=arguments.results_file_root
-        )
+    for directory in directories_of_interest:
+        output_directory: str = f"{directory}/visualisation/"
 
-        try:
-            formatter.convert_all_files()
-            formatter.write_output_file()
-        except Exception as e:
-            log.error(
-                "Encountered an error parsing results in directory %s with name %s"
-                % (arguments.archive, arguments.results_file_root)
+        if not os.path.exists(output_directory) or not os.listdir(output_directory):
+            # directory doesn't exist so we need o post-process the CBT results files first
+            os.makedirs(output_directory, exist_ok=True)
+
+            log.debug("Creating directory %s" % output_directory)
+            os.makedirs(output_directory, exist_ok=True)
+
+            log.info("Generating intermediate files for %s in directory %s" % (directory, output_directory))
+            formatter: CommonOutputFormatter = CommonOutputFormatter(
+                archive_directory=directory, filename_root=arguments.results_file_root
             )
-            log.exception(e)
-            raise e
+
+            try:
+                formatter.convert_all_files()
+                formatter.write_output_file()
+            except Exception as e:
+                log.error(
+                    "Encountered an error parsing results in directory %s with name %s"
+                    % (directory, arguments.results_file_root)
+                )
+                log.exception(e)
+                raise e
 
 
 def main() -> int:
@@ -136,7 +147,6 @@ def main() -> int:
         action="store_true",
         help="Generate a pdf report file in addition to the markdown report",
     )
-
     parser.add_argument(
         "--results_file_root",
         type=str,
