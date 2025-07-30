@@ -63,7 +63,7 @@ class LibrbdFio(Benchmark):
         self.idle_monitor_sleep = config.get('idle_monitor_sleep', 60)
         self.pool_name = config.get("poolname", "cbt-librbdfio")
         self.recov_pool_name = config.get("recov_pool_name", "cbt-librbdfio-recov")
-        self.rbdname = config.get('rbdname', '')
+        self.rbdname = config.get('rbdname', 'cbt-librbdfio')
         # workloads: specify a list of tests
         if not self._workloads.exist():
             self.run_dir +=  ( f'op_size-{int(self.op_size):08d}/'
@@ -78,9 +78,20 @@ class LibrbdFio(Benchmark):
         self.run_dir =  f'{self.base_run_dir}/'
         if self.osd_ra is not None:
             self.run_dir += f'osd_ra-{int(self.osd_ra):08d}/'
+
+        # LEE
+        # Needed to allow for different mixed ratio results with the same block size, we
+        # store the ratio within the directory name. Otherwise workloads would only support
+        # 1 mixed workload for a given block size. For 100% read, 100% write don't need to
+        # store the read/write ratio. 
+        #if self.mode == 'randrw':
+        #   self.run_dir +=  ( f'op_size-{int(self.op_size):08d}/'
+        #                      f'concurrent_procs-{int(self.total_procs):03d}/'
+        #                      f'iodepth-{int(self.iodepth):03d}/{self.mode}{self.rwmixread}{self.rwmixwrite}' )
+        #else:
         self.run_dir +=  ( f'op_size-{int(self.op_size):08d}/'
-                        f'concurrent_procs-{int(self.total_procs):03d}/'
-                        f'iodepth-{int(self.iodepth):03d}/{self.mode}' )
+                           f'concurrent_procs-{int(self.total_procs):03d}/'
+                           f'iodepth-{int(self.iodepth):03d}/{self.mode}' ) 
 
         self.out_dir = self.archive_dir
 
@@ -120,7 +131,7 @@ class LibrbdFio(Benchmark):
         logger.info('Creating fio images...')
         self.mkimages()
         logger.info('Attempting to prefill fio images...')
-        self.prefill()
+        # LEE disabled self.prefill()
 
 
     def run(self):
@@ -132,13 +143,17 @@ class LibrbdFio(Benchmark):
         # dump the cluster config
         self.cluster.dump_config(self.run_dir)
         time.sleep(5)
+
+        # LEE
         # If the pg autoscaler kicks in before starting the test,
         # wait for it to complete. Otherwise, results may be skewed.
-        ret = self.cluster.check_pg_autoscaler(self.wait_pgautoscaler_timeout,
-                                               f"{self.run_dir}/pgautoscaler.log")
-        if ret == 1:
-            logger.warn("PG autoscaler taking longer to complete."
-                        "Continuing anyway...results may be skewed.")
+        # ret = self.cluster.check_pg_autoscaler(self.wait_pgautoscaler_timeout,
+        #                                        f"{self.run_dir}/pgautoscaler.log")
+        # if ret == 1:
+        #    logger.warn("PG autoscaler taking longer to complete."
+        #                "Continuing anyway...results may be skewed.")
+        # LEE
+
         # Start the recovery thread if requested
         if 'recovery_test' in self.cluster.config:
             if self.recov_test_type == 'blocking':
@@ -272,12 +287,13 @@ class LibrbdFio(Benchmark):
                 self.data_pool = self.pool_name + "-data"
                 self.cluster.rmpool(self.data_pool, self.data_pool_profile)
                 self.cluster.mkpool(self.data_pool, self.data_pool_profile, 'rbd')
-        for node in common.get_fqdn_list('clients'):
-            for volnum in range(0, self.volumes_per_client):
-                node = node.rpartition("@")[2]
-                self.cluster.mkimage( f'cbt-librbdfio-{node}-{volnum:d}',
-                                     self.vol_size, self.pool_name, self.data_pool,
-                                     self.vol_object_size)
+            # LEE was outdented
+            for node in common.get_fqdn_list('clients'):
+                for volnum in range(0, self.volumes_per_client):
+                    node = node.rpartition("@")[2]
+                    self.cluster.mkimage( f'cbt-librbdfio-{node}-{volnum:d}',
+                                          self.vol_size, self.pool_name, self.data_pool,
+                                          self.vol_object_size)
         monitoring.stop()
 
 
@@ -286,9 +302,11 @@ class LibrbdFio(Benchmark):
         Execute a FIO cmd to prefill the volumes
         """
         ps = []
-        if not self.use_existing_volumes:
+        # LEE was not self.use_existing_volumes
+        if self.use_existing_volumes:
+            rbd_base_name: str = self.rbdname
             for volnum in range(self.volumes_per_client):
-                rbd_name = f'cbt-librbdfio-`{common.get_fqdn_cmd()}`-{volnum:d}'
+                rbd_name = f'{rbd_base_name}-`{common.get_fqdn_cmd()}`-{volnum:d}'
                 pre_cmd = ''
                 if not self.no_sudo:
                     pre_cmd += 'sudo '

@@ -42,6 +42,7 @@ class FioCommand(Command, metaclass=ABCMeta):
         for this fio run and add them to the CliOptons for this workload
         """
 
+
     def _parse_global_options(self, options: dict[str, str]) -> CliOptions:
         global_options: CliOptions = CliOptions(options)
 
